@@ -1,10 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from telegram import Updater
-import logging,pickle,datetime
+import logging,pickle,datetime,json
 from random import choice
 from os import listdir
 from os.path import isfile, join
+
+#lataa asetukset
+with open("settings.json","r") as f:
+        try:
+            settings = json.load(f)
+        except ValueError:
+            settings = {}
+            print("Error loading settings")
 
 def save_insult(savefile):
     with open('insult.pc', 'wb') as handle:
@@ -153,7 +161,7 @@ def error(bot, update, error):
 
 def main():
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater("")
+    updater = Updater(settings["authkey"])
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
