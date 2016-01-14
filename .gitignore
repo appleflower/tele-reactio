@@ -1,0 +1,17 @@
+# Kuvakansiot
+/kuva
+/kuvaR
+
+# Asetukset
+/settings.json
+
+# Runtimessä muutettavat tiedostot
+/cd_fail.json
+
+# Logifilut ja arkistot
+*.log
+*.rar
+
+# Rahkan megaskripti
+/run
+
