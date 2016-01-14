@@ -6,7 +6,7 @@ from random import choice
 from os import listdir
 from os.path import isfile, join
 
-haukkumanimi = ["apina","fagem","gay","homo","fagum","tyhmä","retard"]
+haukkumanimi = ["apina","fagem","gay","homo","fagum","tyhmä","retard","kivi","kahva","jutsku","peelo"]
 
 #lataa asetukset
 with open("settings.json","r") as f:
@@ -103,7 +103,7 @@ def reactio(bot,update):
             else:
                 cd_fail[name] += 1
                 bot.sendMessage(id,"Olet failannut muistaa cooldownin {0} kertaa. OOTKO {1}"
-                                .format(cd_fail[name],choice(haukkumanimi)))
+                                .format(cd_fail[name],choice(haukkumanimi).upper()))
                 with open('cd_fail.json', 'w') as outfile:
                     json.dump(cd_fail, outfile)
             print(name + " cooldown")
