@@ -45,6 +45,10 @@ mypath2 = "kuvaR"
 onlyfilesR = [f for f in listdir(mypath2) if isfile(join(mypath2, f))]
 print("loaded " + str(len(onlyfilesR) +1) + " files")
 
+mypath3 = "kuvaR/jew/"
+jutkufiles = [f for f in listdir(mypath3) if isfile(join(mypath3, f))]
+print("loaded " + str(len(jutkufiles) +1) + " jutku files")
+
 users = {}
 
 # Enable logging
@@ -181,13 +185,20 @@ def new_insult(bot,update):
     else:
         bot.sendMessage(id,"Tyhjä lause vitun retardi.")
 
+def jutku(bot,update):
+    if "jew" in update.message.text or "jutku" in update.message.text:
+        id = update.message.chat_id
+        path = "kuvaR/jew/" + choice(jutkufiles)
+        kuva = open(path,"rb")
+        bot.sendPhoto(id,kuva)
+
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
 
 def main():
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater(settings["authkey"])
-
+    #updater = Updater(settings["authkey"])
+    updater = Updater("153444739:AAH0eEca1WKad5kTbHkeNjG2XR-BNuEoDGI")
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
@@ -196,6 +207,7 @@ def main():
     dp.addTelegramCommandHandler("kuva", kuva)
     dp.addTelegramCommandHandler("kiusua", insult)
     dp.addTelegramCommandHandler("new_insult", new_insult)
+    dp.addTelegramMessageHandler(jutku)
 
 
     # log all errors
