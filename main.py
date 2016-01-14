@@ -6,13 +6,22 @@ from random import choice
 from os import listdir
 from os.path import isfile, join
 
+haukkumanimi = ["apina","fagem","gay","homo","fagum","tyhmä","retard"]
+
 #lataa asetukset
 with open("settings.json","r") as f:
-        try:
-            settings = json.load(f)
-        except ValueError:
-            settings = {}
-            print("Error loading settings")
+    try:
+        settings = json.load(f)
+    except ValueError:
+        settings = {}
+        print("Error loading settings")
+
+with open("cd_fail.json","r") as f:
+    try:
+        cd_fail = json.load(f)
+    except ValueError:
+        cd_fail = {}
+        print("Error loading settings")
 
 def save_insult(savefile):
     with open('insult.pc', 'wb') as handle:
@@ -88,7 +97,16 @@ def reactio(bot,update):
             bot.sendPhoto(id,kuva)
             kuva.close()
             users[name] = datetime.datetime.now() + datetime.timedelta(minutes=1)
-        else: print(name + " cooldown")
+        else:
+            if name not in cd_fail.keys():
+                cd_fail[name] = 1
+            else:
+                cd_fail[name] += 1
+                bot.sendMessage(id,"Olet failannut muistaa cooldownin {0} kertaa. OOTKO {1}"
+                                .format(cd_fail[name],choice(haukkumanimi)))
+                with open('cd_fail.json', 'w') as outfile:
+                    json.dump(cd_fail, outfile)
+            print(name + " cooldown")
 
 def kuva(bot,update):
 
@@ -114,7 +132,14 @@ def kuva(bot,update):
             bot.sendPhoto(id,kuva)
             kuva.close()
             users[name] = datetime.datetime.now() + datetime.timedelta(minutes=1)
-        else: print(name + " cooldown")
+        else:
+            if name not in cd_fail.keys(): cd_fail[name] = 1
+            else: cd_fail[name] += 1
+            bot.sendMessage(id,"Olet failannut muistaa cooldownin {0} kertaa. ootko {1}"
+                                .format(cd_fail[name],choice(haukkumanimi).upper()))
+            with open('cd_fail.json', 'w') as outfile:
+                    json.dump(cd_fail, outfile)
+            print(name + " cooldown")
 
 def insult(bot,update):
     name = update.message.from_user.username
