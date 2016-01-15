@@ -1,32 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from telegram import Updater
-import logging,pickle,datetime,json
+import logging,pickle
 from random import choice
-from os import listdir
-from os.path import isfile, join
+from manager import manager
+from datetime import datetime
 
+man = manager()
 haukkumanimi = ["apina","fagem","gay","homo","fagum","tyhmä","retard","kivi","kahva","jutsku","peelo"]
 
-#lataa asetukset
-with open("settings.json","r") as f:
-    try:
-        settings = json.load(f)
-    except ValueError:
-        settings = {}
-        print("Error loading settings")
-
-with open("cd_fail.json","r") as f:
-    try:
-        cd_fail = json.load(f)
-    except ValueError:
-        cd_fail = {}
-        print("Error loading settings")
-
-def save_insult(savefile):
-    with open('insult.pc', 'wb') as handle:
-                pickle.dump(savefile, handle)
-    print("saved asd")
 
 def load_insults():
     file = open("insult.pc",'rb')
@@ -35,21 +17,7 @@ def load_insults():
     print("loaded insults")
     return f
 
-insults = load_insults()
-
-mypath = "kuva"
-onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-print("loaded " + str(len(onlyfiles) +1) + " files")
-
-mypath2 = "kuvaR"
-onlyfilesR = [f for f in listdir(mypath2) if isfile(join(mypath2, f))]
-print("loaded " + str(len(onlyfilesR) +1) + " files")
-
-mypath3 = "kuvaR/jew/"
-jutkufiles = [f for f in listdir(mypath3) if isfile(join(mypath3, f))]
-print("loaded " + str(len(jutkufiles) +1) + " jutku files")
-
-users = {}
+#insults = load_insults()
 
 # Enable logging
 logging.basicConfig(
@@ -74,76 +42,6 @@ def get_insult(name,msg):
         r = choice(i2)
         r = r[1]
         return r
-
-
-
-def reactio(bot,update):
-
-    path = "kuva/" + choice(onlyfiles)
-
-    name = update.message.from_user.username
-    id = update.message.chat_id
-    text = update.message.text
-    time = datetime.datetime.now()
-
-    print(name + " - reactio")
-    if name not in users.keys():
-        print("post 1")
-        users[name] = datetime.datetime.now() + datetime.timedelta(minutes=1)
-        kuva = open(path,"rb")
-        bot.sendPhoto(id,kuva)
-        kuva.close()
-
-    else:
-        print(users[name],time)
-        if time > users[name]:
-            kuva = open(path,"rb")
-            bot.sendPhoto(id,kuva)
-            kuva.close()
-            users[name] = datetime.datetime.now() + datetime.timedelta(minutes=1)
-        else:
-            if name not in cd_fail.keys():
-                cd_fail[name] = 1
-            else:
-                cd_fail[name] += 1
-                bot.sendMessage(id,"Olet failannut muistaa cooldownin {0} kertaa. OOTKO {1}"
-                                .format(cd_fail[name],choice(haukkumanimi).upper()))
-                with open('cd_fail.json', 'w') as outfile:
-                    json.dump(cd_fail, outfile)
-            print(name + " cooldown")
-
-def kuva(bot,update):
-
-    path = "kuvaR/" + choice(onlyfilesR)
-
-    name = update.message.from_user.username
-    id = update.message.chat_id
-    text = update.message.text
-    time = datetime.datetime.now()
-
-    print(name + " - kuva")
-    if name not in users.keys():
-        print("post 1")
-        users[name] = datetime.datetime.now() + datetime.timedelta(minutes=1)
-        kuva = open(path,"rb")
-        bot.sendPhoto(id,kuva)
-        kuva.close()
-
-    else:
-        print(users[name],time)
-        if time > users[name]:
-            kuva = open(path,"rb")
-            bot.sendPhoto(id,kuva)
-            kuva.close()
-            users[name] = datetime.datetime.now() + datetime.timedelta(minutes=1)
-        else:
-            if name not in cd_fail.keys(): cd_fail[name] = 1
-            else: cd_fail[name] += 1
-            bot.sendMessage(id,"Olet failannut muistaa cooldownin {0} kertaa. ootko {1}"
-                                .format(cd_fail[name],choice(haukkumanimi).upper()))
-            with open('cd_fail.json', 'w') as outfile:
-                    json.dump(cd_fail, outfile)
-            print(name + " cooldown")
 
 def insult(bot,update):
     name = update.message.from_user.username
@@ -185,38 +83,77 @@ def new_insult(bot,update):
     else:
         bot.sendMessage(id,"Tyhjä lause vitun retardi.")
 
+def reactio(bot,update):
+    name = update.message.from_user.username
+    id = update.message.chat_id
+
+    print(name + " - reactio")
+    if name not in man.cd_list.keys():
+        man.cd_list[name] = datetime.now()
+        r = man.get_img("r")
+        if type(r) is not None: bot.sendPhoto(id,r)
+        else: bot.sendMessage(id,"kaalilaatikko")
+
+    else:
+        if man.check_cd(name,60):
+            man.cd_list[name] = datetime.now()
+            r = man.get_img("r")
+            if type(r) is not None: bot.sendPhoto(id,r)
+            else: bot.sendMessage(id,"kaalilaatikko")
+        else:
+            bot.sendMessage(id,"Olet failannut muistaa cooldownin {0} kertaa. OOTKO {1}"
+                                .format(man.cd_fail[name],choice(haukkumanimi).upper()))
+
+def kuva(bot,update):
+    name = update.message.from_user.username
+    id = update.message.chat_id
+
+    print(name + " - kuva")
+    if name not in man.cd_list.keys():
+        man.cd_list[name] = datetime.now()
+        r = man.get_img("k")
+        if type(r) is not None: bot.sendPhoto(id,r)
+        else: bot.sendMessage(id,"kaalilaatikko")
+
+    else:
+        if man.check_cd(name,60):
+            man.cd_list[name] = datetime.now()
+            r = man.get_img("k")
+            if type(r) is not None: bot.sendPhoto(id,r)
+            else: bot.sendMessage(id,"kaalilaatikko")
+        else:
+            bot.sendMessage(id,"Olet failannut muistaa cooldownin {0} kertaa. OOTKO {1}"
+                                .format(man.cd_fail[name],choice(haukkumanimi).upper()))
+
 def jutku(bot,update):
     if "jew" in update.message.text or "jutku" in update.message.text:
-        id = update.message.chat_id
-        path = "kuvaR/jew/" + choice(jutkufiles)
-        kuva = open(path,"rb")
-        bot.sendPhoto(id,kuva)
+        if "jutku" not in man.cd_list.keys():
+            man.cd_list["jutku"] = datetime.now()
+            id = update.message.chat_id
+            r = man.get_img("j")
+            bot.sendPhoto(id,r)
+        else:
+            if man.check_cd("jutku",30):
+                man.cd_list["jutku"] = datetime.now()
+                id = update.message.chat_id
+                r = man.get_img("j")
+                bot.sendPhoto(id,r)
 
 def error(bot, update, error):
     logger.warn('Update "%s" caused error "%s"' % (update, error))
 
 def main():
-    # Create the EventHandler and pass it your bot's token.
-    updater = Updater(settings["authkey"])
-    # Get the dispatcher to register handlers
+    updater = Updater(man.settings["authkey"])
     dp = updater.dispatcher
 
-    # on different commands - answer in Telegram
     dp.addTelegramCommandHandler("reactio", reactio)
     dp.addTelegramCommandHandler("kuva", kuva)
-    dp.addTelegramCommandHandler("kiusua", insult)
-    dp.addTelegramCommandHandler("new_insult", new_insult)
+    #dp.addTelegramCommandHandler("kiusua", insult)
+    #dp.addTelegramCommandHandler("new_insult", new_insult)
     dp.addTelegramMessageHandler(jutku)
 
-
-    # log all errors
     dp.addErrorHandler(error)
-
-    # Start the Bot
     update_queue = updater.start_polling(poll_interval=0.1, timeout=10)
-    # Run the bot until the you presses Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
 
     while True:
         try:
@@ -232,7 +169,6 @@ def main():
         # else, put the text into the update queue to be handled by our handlers
         elif len(text) > 0:
             update_queue.put(text)
-
 
 if __name__ == '__main__':
     main()
